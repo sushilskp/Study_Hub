@@ -1,0 +1,1308 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>StudyHub — Your Complete Study & Exam Prep Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ========== THEME (CSS variables) ========== */
+    :root{
+      --bg:#0b0f1a; --surface:#0f1724; --card:#0c1220; --muted:#9aa4b2; --accent:#3b82f6;
+      --text:#e6eef8; --heading:#ffffff; --code-bg:#0a0a0a; --code-text:#e6eef8; --border:rgba(255,255,255,0.06);
+      --hl:#fde047; --link:var(--accent); --btn-text:#ffffff; --shadow:0 8px 24px rgba(0,0,0,.35);
+      --img-filter:invert(0); --checkbox:#3b82f6; --danger:#ef4444; --ok:#22c55e; --warn:#f59e0b;
+      --tr:.3s ease;
+    }
+    [data-theme="light"]{
+      --bg:#ffffff; --surface:#f5f7fb; --card:#ffffff; --muted:#5b6b78; --accent:#2563eb;
+      --text:#0b1220; --heading:#0b1220; --code-bg:#f2f4f8; --code-text:#0b1220; --border:rgba(0,0,0,0.08);
+      --hl:#ffe58f; --link:#1d4ed8; --btn-text:#ffffff; --shadow:0 8px 24px rgba(0,0,0,.10);
+      --img-filter:invert(0); --checkbox:#2563eb;
+    }
+
+    /* ========== BASE ========== */
+    *, *::before, *::after{box-sizing:border-box}
+    html, body{height:100%; margin:0}
+    body{
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background:var(--bg); color:var(--text);
+      transition: background var(--tr), color var(--tr);
+    }
+    a{color:var(--link); text-decoration:none}
+    a:hover{text-decoration:underline}
+
+    /* Header / Footer */
+    .global-header,.global-footer{background:var(--surface); padding:12px 20px; border-bottom:1px solid var(--border);}
+    .global-footer{border-top:1px solid var(--border); border-bottom:none; margin-top:20px; text-align:center}
+    .global-footer p{margin:4px 0}
+
+    header{height:64px; display:flex; justify-content:space-between; align-items:center; padding:0 20px; background:var(--surface); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:50}
+    .brand{display:flex; align-items:center; gap:8px}
+    .brand img{width:28px; height:28px; border-radius:6px}
+    .brand h1{margin:0; font-size:18px; color:var(--heading)}
+
+    .topnav{display:flex; gap:16px; align-items:center}
+    .topnav a{color:var(--muted); font-weight:500; font-size:15px}
+    .topnav a.active{color:var(--text); border-bottom:2px solid var(--accent); padding-bottom:2px}
+    .header-controls{display:flex; gap:10px; align-items:center}
+    .btn,.ghost{padding:8px 12px; border-radius:8px; cursor:pointer; border:0}
+    .btn{background:var(--accent); color:#fff}
+    .ghost{background:transparent; border:1px solid var(--border); color:var(--text)}
+
+    /* Layout */
+    .layout{display:grid; grid-template-columns:260px 1fr; min-height:100vh}
+    nav#sidebar{padding:16px; background:var(--surface); border-right:1px solid var(--border); position:sticky; top:64px; height:calc(100vh - 64px); overflow:auto}
+    .nav-link{display:flex; align-items:center; gap:8px; padding:10px; border-radius:8px; color:var(--muted)}
+    .nav-link[aria-current="page"]{background:rgba(59,130,246,.15); color:var(--text)}
+
+    main{padding:16px}
+    .card{background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px; box-shadow:var(--shadow)}
+    h2,h3{margin-top:0; color:var(--heading)}
+
+    /* Responsive */
+    .hamburger{display:none; background:none; border:0; font-size:22px; cursor:pointer}
+    @media(max-width:900px){
+      .layout{grid-template-columns:1fr}
+      nav#sidebar{position:fixed; inset:64px auto 0 0; width:240px; transform:translateX(-100%); transition:.25s; z-index:99}
+      nav#sidebar.open{transform:translateX(0)}
+      .hamburger{display:block}
+      .topnav{display:none} /* hide top nav on small screens */
+    }
+
+    /* Components */
+    .pyq-year{padding:8px; border-radius:8px; background:rgba(127,127,127,.08); display:inline-block; margin:6px 6px 0 0; border:1px solid var(--border)}
+    .subjects-list{display:grid; gap:12px}
+    .subject-card{padding:12px; border-radius:10px; background:linear-gradient(180deg, rgba(255,255,255,.015), transparent); border:1px solid var(--border)}
+    .books-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px}
+    .book-card{background:linear-gradient(180deg, rgba(255,255,255,.015), transparent); border:1px solid var(--border); border-radius:12px; padding:12px}
+    .book-card img{width:100%; aspect-ratio: 3/2; object-fit:cover; border-radius:10px; border:1px solid var(--border)}
+
+    .note{border-left:4px solid var(--accent); padding:10px; border-radius:6px; background:linear-gradient(90deg, rgba(59,130,246,.10), transparent)}
+    .definition{border-left:4px solid #f97316; padding:10px; border-radius:6px; background:linear-gradient(90deg, rgba(249,115,22,.10), transparent)}
+
+    pre.code{background:var(--code-bg); color:var(--code-text); padding:12px; border-radius:8px; overflow:auto; border:1px solid var(--border)}
+    .code-wrapper{position:relative}
+    .code-tools{position:absolute; top:6px; right:6px; display:flex; gap:6px}
+
+    .checkbox{width:16px; height:16px; appearance:none; outline:none; border:2px solid var(--checkbox); border-radius:4px; display:inline-grid; place-content:center; cursor:pointer; vertical-align:middle}
+    .checkbox:checked{background:var(--checkbox)}
+    .checkbox:checked::after{content:"✓"; font-size:12px; color:white; line-height:1}
+
+    #toast{position:fixed; right:16px; bottom:76px; background:var(--surface); color:var(--text); padding:12px; border-radius:10px; display:none; box-shadow:var(--shadow); border:1px solid var(--border)}
+    input[type="text"], input[type="search"], input[type="password"]{padding:8px 10px; border-radius:10px; border:1px solid var(--border); background:rgba(127,127,127,.08); color:var(--text); outline:none}
+
+    /* Login/Signup Modal */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.7); display: flex; justify-content: center; align-items: center;
+      z-index: 1000;
+    }
+    .modal-content {
+      background: var(--card); padding: 20px; border-radius: 12px;
+      box-shadow: var(--shadow); width: 90%; max-width: 400px;
+      position: relative;
+    }
+    .modal-close {
+      position: absolute; top: 10px; right: 10px; background: none; border: none;
+      font-size: 24px; cursor: pointer; color: var(--muted);
+    }
+    .modal-content h3 { margin-top: 0; }
+    .modal-content label { display: block; margin-bottom: 8px; }
+    .modal-content input { width: calc(100% - 20px); margin-bottom: 15px; }
+    .modal-content button { width: 100%; margin-top: 10px; }
+    .modal-toggle-link {
+      text-align: center; margin-top: 15px; font-size: 14px;
+    }
+    .modal-toggle-link a {
+      cursor: pointer; color: var(--accent); text-decoration: underline;
+    }
+    .social-login-btn {
+      display: flex; align-items: center; justify-content: center;
+      gap: 10px; padding: 10px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text); cursor: pointer;
+      font-size: 16px; margin-top: 15px;
+    }
+    .social-login-btn img {
+      width: 20px; height: 20px;
+    }
+
+    /* Splash Screen Styles */
+    #splash-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg); /* Use your theme's background color */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      opacity: 1;
+      transition: opacity 1s ease-out;
+    }
+    #splash-screen.fade-out {
+      opacity: 0;
+      pointer-events: none; /* Disable interaction after fade-out starts */
+    }
+    #splash-screen img {
+      width: 100px; /* Adjust size as needed */
+      height: 100px;
+      animation: bounce 1s infinite alternate; /* Simple animation */
+    }
+    #splash-screen h1 {
+      color: var(--heading);
+      font-size: 2.5em;
+      margin-top: 20px;
+      animation: fadeIn 1.5s ease-in-out;
+    }
+    #splash-screen p {
+      color: var(--muted);
+      font-size: 1.2em;
+      margin-top: 10px;
+      animation: fadeIn 2s ease-in-out;
+    }
+
+    @keyframes bounce {
+      from { transform: translateY(0); }
+      to { transform: translateY(-15px); }
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body data-theme="dark">
+  <!-- Splash Screen -->
+  <div id="splash-screen">
+    <img src="logo.jpg" alt="StudyHub Logo" />
+    <h1>StudyHub</h1>
+    <p>Your Complete Study & Exam Prep Portal</p>
+  </div>
+
+  <!-- Welcome strip -->
+  <div class="global-header">
+    <p style="margin:0;">📘 Welcome to StudyHub - Your Learning Companion</p>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <button id="hamburger" class="hamburger">☰</button>
+      <img src="logo.jpg" alt="StudyHub Logo" width="28" height="28" />
+      <h1>StudyHub</h1>
+    </div>
+    <nav class="topnav">
+      <a href="#home" data-route="#home" class="active">Home</a>
+      <a href="#subjects" data-route="#subjects">Subjects</a>
+      <a href="#pyqs" data-route="#pyqs">PYQs</a>
+      <a href="#books" data-route="#books">Books</a>
+      <a href="#notes" data-route="#notes">Notes</a>
+      <a href="#profile" data-route="#profile">Profile</a>
+    </nav>
+    <div class="header-controls">
+      <button class="ghost" id="themeToggle">🌙</button>
+      <button class="ghost" id="loginBtn">Login</button>
+    </div>
+  </header>
+
+  <div class="layout" id="app">
+    <!-- Sidebar -->
+    <nav id="sidebar">
+      <div class="brand" style="margin-bottom:12px;">
+        <img src="AS logo.jpg" alt="StudyHub Logo" width="28" height="28" />
+        <h1>StudyHub</h1>
+      </div>
+      <a class="nav-link" href="#home" data-route="#home">🏠 Home</a>
+      <a class="nav-link" href="#subjects" data-route="#subjects">📚 Subjects</a>
+      <a class="nav-link" href="#pyqs" data-route="#pyqs">📝 PYQs</a>
+      <a class="nav-link" href="#books" data-route="#books">📖 Books</a>
+      <a class="nav-link" href="#notes" data-route="#notes">🗒️ Notes</a>
+      <a class="nav-link" href="#profile" data-route="#profile">👤 Profile</a>
+    </nav>
+
+    <!-- Main -->
+    <div style="display:flex; flex-direction:column; min-height:100vh">
+      <main>
+        <!-- HOME -->
+        <section id="home" data-view class="view">
+          <div class="grid">
+            <div>
+              <div class="card">
+                <h2>Welcome to StudyHub</h2>
+                <p class="muted">All-in-one study portal. Click any subject to open full notes (login required).</p>
+                <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap">
+                  <button class="btn" id="downloadAllPdf">Download All Notes as PDF</button>
+                  <button class="ghost" id="enterExam">Enable Exam Mode</button>
+                </div>
+              </div>
+
+              <div style="height:12px"></div>
+
+              <div class="card">
+                <h3>Subjects</h3>
+                <div class="subjects-list" id="subjectsCompact"></div>
+              </div>
+            </div>
+
+            <aside>
+              <div class="card">
+                <h3>Quick PYQs</h3>
+                <div id="homePyqs" style="margin-top:8px"></div>
+              </div>
+
+              <div style="height:12px"></div>
+
+              <div class="card">
+                <h3>Books Recents</h3>
+                <div id="booksList" style="margin-top:8px"></div>
+              </div
+            </aside>
+          </div>
+        </section>
+
+        <!-- SUBJECTS -->
+        <section id="subjects" data-view class="view" hidden>
+          <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap">
+              <h2>Subjects & Notes</h2>
+              <input id="subjectSearch" type="search" placeholder="Search subjects…">
+            </div>
+            <div id="subjectsList" style="margin-top:12px; display:grid; grid-template-columns:repeat(auto-fit, minmax(260px,1fr)); gap:12px"></div>
+          </div>
+        </section>
+
+        <!-- PYQS -->
+        <section id="pyqs" data-view class="view" hidden>
+          <div class="card">
+            <h2>Previous Year Questions (PYQs)</h2>
+            <div id="pyqsMaster" style="margin-top:12px"></div>
+          </div>
+        </section>
+
+        <!-- BOOKS -->
+        <section id="books" data-view class="view" hidden>
+          <div class="card">
+            <h2>Books & Notes</h2>
+            <p class="muted">All links open in a new tab. Replace the file names with your actual PDFs/images.</p>
+            <div class="books-grid" id="booksGrid">
+              <!-- Syllabus -->
+              <div class="book-card">
+                <img src="Syllabus.jpg" alt="Syllabus cover" />
+                <h3>Syllabus</h3>
+                <p>SPPU Official Syllabus</p>
+                <div style="display:flex; gap:8px; flex-wrap:wrap">
+                  <a href="SPPU_NEP_SYB.COM. (CA) Semester III_24062025.pdf" target="_blank" class="btn">Open PDF</a>
+                </div>
+              </div>
+
+              <!-- DS -->
+              <div class="book-card">
+                <img src="Data Structure.jpg" alt="Data Structure Book" />
+                <h3>Data Structure</h3>
+                <p>Comprehensive notes on Data Structures in C.</p>
+                <div style="display:flex; gap:8px; flex-wrap:wrap">
+                  <a href="Data Structure.pdf" target="_blank" class="btn">Book</a>
+                  <a href="data structure presentation.pdf" target="_blank" class="ghost">Notes</a>
+                  <a href="data structure pyq.pdf" target="_blank" class="ghost">PYQs</a>
+                </div>
+              </div>
+
+              <!-- Cyber -->
+              <div class="book-card">
+                <img src="Introduction to Cyber Security.jpg" alt="Cyber Security Book" />
+                <h3>Introduction to Cyber Security</h3>
+                <p>Basics and advanced concepts of Cyber Security.</p>
+                <div style="display:flex; gap:8px; flex-wrap:wrap">
+                  <a href="Introduction-cyber-security.pdf" target="_blank" class="btn">Book</a>
+                  <a href="cybersecurity notes.pdf" target="_blank" class="ghost">Notes</a>
+                  <a href="cyber security pyq.pdf" target="_blank" class="ghost">PYQs</a>
+                </div>
+              </div>
+
+              <!-- PHP -->
+              <div class="book-card">
+                <img src="Programming PHP.jpg" alt="Programming PHP Book" />
+                <h3>Programming PHP</h3>
+                <p>Learn PHP programming from fundamentals to advanced.</p>
+                <div style="display:flex; gap:8px; flex-wrap:wrap">
+                  <a href="Programming-PHP.pdf" target="_blank" class="btn">Book</a>
+                  <a href="PHP Notes.pdf" target="_blank" class="ghost">Notes</a>
+                  <a href="PHP PYQ's.pdf" target="_blank" class="ghost">PYQs</a>
+                </div>
+              </div>
+
+              <!-- Extra -->
+              <div class="book-card">
+                <img src="Extra.jpg" alt="Extra" />
+                <h3>Extra</h3>
+                <div style="display:flex; gap:8px; flex-wrap:wrap">
+                  <a href="html.pdf" target="_blank" class="ghost">HTML</a>
+                  <a href="dbms.pdf" target="_blank" class="ghost">DBMS</a>
+                  <a href="data science.pdf" target="_blank" class="ghost">Data Science</a>
+                  <a href="Python Programming.pdf" target="_blank" class="ghost">Python</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- NOTES FULL VIEW -->
+        <section id="notes" data-view class="view" hidden>
+          <div class="card" id="notesCard">
+            <div style="display:flex; justify-content:space-between; gap:8px; align-items:center; flex-wrap:wrap">
+              <div>
+                <h2 id="notesTitle">Subject Title</h2>
+                <div class="muted" id="lastUpdated">Last Updated: --</div>
+                <div class="muted" id="estimatedTime">Estimated Study Time: --</div>
+              </div>
+              <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap">
+                <button class="ghost" id="examModeToggle">Enable Exam Mode</button>
+                <button class="ghost" id="printBtn">Print / Save PDF</button>
+                <a class="ghost" href="#subjects" id="backToSubjects">Back to Subjects</a>
+              </div>
+            </div>
+            <hr style="margin:12px 0; border:0; border-top:1px solid var(--border)">
+            <div style="display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap">
+              <div style="flex:1; min-width:280px">
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap">
+                  <div id="toc"></div>
+                  <div style="display:flex; gap:8px; align-items:center">
+                    <input id="notesSearch" type="search" placeholder="Search inside notes…">
+                    <div id="searchNav" style="display:none; gap:6px; align-items:center">
+                      <button class="ghost" id="prevMatch">◀</button>
+                      <button class="ghost" id="nextMatch">▶</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div id="notesContent" style="margin-top:12px"></div>
+              </div>
+
+              <aside style="width:320px; max-width:100%">
+                <div class="card">
+                  <h3>Progress</h3>
+                  <div id="progressSummary" style="margin-top:8px">Progress: 0% complete</div>
+                  <div id="progressList" style="margin-top:8px"></div>
+                </div>
+
+                <div style="height:12px"></div>
+
+                <div class="card">
+                  <h3>PYQs for this subject</h3>
+                  <div id="subjectPyqs" style="margin-top:8px"></div>
+                </div>
+              </aside>
+            </div>
+          </div>
+        </section>
+
+        <!-- PROFILE -->
+        <section id="profile" data-view class="view" hidden>
+          <div class="card">
+            <h2>Profile</h2>
+            <div id="profilePanel" style="margin-top:12px"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <!-- Login/Signup Modal -->
+  <div id="authModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <button class="modal-close" id="closeAuthModal">&times;</button>
+
+      <div id="loginFormContainer">
+        <h3>Login to StudyHub</h3>
+        <form id="loginForm">
+          <label for="loginUsername">Username:</label>
+          <input type="text" id="loginUsername" required>
+          <label for="loginPassword">Password:</label>
+          <input type="password" id="loginPassword" required>
+          <button type="submit" class="btn">Login</button>
+        </form>
+        <button class="social-login-btn" id="googleLoginBtn">
+          <img src="https://www.google.com/favicon.ico" alt="Google icon">
+          Continue with Google
+        </button>
+        <p class="modal-toggle-link">Don't have an account? <a id="showSignup">Sign Up</a></p>
+      </div>
+
+      <div id="signupFormContainer" style="display: none;">
+        <h3>Sign Up for StudyHub</h3>
+        <form id="signupForm">
+          <label for="signupUsername">Username:</label>
+          <input type="text" id="signupUsername" required>
+          <label for="signupPassword">Password:</label>
+          <input type="password" id="signupPassword" required>
+          <label for="signupConfirmPassword">Confirm Password:</label>
+          <input type="password" id="signupConfirmPassword" required>
+          <button type="submit" class="btn">Sign Up</button>
+        </form>
+        <button class="social-login-btn" id="googleSignupBtn">
+          <img src="https://www.google.com/favicon.ico" alt="Google icon">
+          Continue with Google
+        </button>
+        <p class="modal-toggle-link">Already have an account? <a id="showLogin">Login</a></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="global-footer">
+    <p>&copy; 2024 StudyHub. All rights reserved. Powered by Sushil Panchal.</p>
+    <p>📧 Email: support@studyhub.com | 📱 Phone: +91-9876543210</p>
+    <p><a href="#">Facebook</a> · <a href="#">Twitter</a> · <a href="#">LinkedIn</a></p>
+  </div>
+
+<script>
+/* ====================== DATA ====================== */
+const SUBJECTS = [
+  {
+    id:'ds', title:'Data Structures',
+    summary:'Arrays, lists, stacks, queues, trees, graphs, hashing, sorting & searching.',
+    estimated:'10 hours', lastUpdated: new Date().toLocaleDateString(),
+    toc:[
+      {id:'ds1',title:'Arrays & Linked Lists'},
+      {id:'ds2',title:'Stacks & Queues'},
+      {id:'ds3',title:'Trees & Binary Search Trees'},
+      {id:'ds4',title:'Graphs & Traversals'},
+      {id:'ds5',title:'Sorting & Searching Algorithms'}
+    ],
+    content:{
+      ds1:`<h3 id="ds1">Arrays & Linked Lists</h3>
+<p>Arrays give O(1) index access and strong locality, but insert/delete in middle is O(n). Linked lists use nodes with pointers; they provide O(1) insert/delete at known positions, but O(n) access by index.</p>
+<div class="definition"><strong>Key points</strong><ul><li>Array: contiguous memory; index O(1); shifting cost O(n).</li><li>Linked list: dynamic size; insert/delete O(1) at head; search O(n).</li></ul></div>
+<p><strong>Example (C): singly linked list insert at head</strong></p>
+<pre class="code">/* C: simple singly linked list insert at head */
+#include <stdio.h>
+#include <stdlib.h>
+struct Node{int data; struct Node *next;};
+void push(struct Node** head_ref, int new_data){
+  struct Node* new_node = (struct Node*)malloc(sizeof(struct Node));
+  new_node->data = new_data; new_node->next = *head_ref; *head_ref = new_node;
+}</pre>
+<div class="note">Use arrays when random access dominates; use lists when frequent inserts/removals occur.</div>`,
+      ds2:`<h3 id="ds2">Stacks & Queues</h3>
+<p>Stacks (LIFO) support <em>push/pop</em>; queues (FIFO) support <em>enqueue/dequeue</em>. Uses: recursion, backtracking, expression parsing (stack); scheduling and BFS (queue).</p>
+<pre class="code">#define MAX 100
+int stack[MAX]; int top=-1;
+void push(int x){ if(top<MAX-1) stack[++top]=x; }
+int pop(){ return (top>=0)? stack[top--] : -1; }</pre>`,
+      ds3:`<h3 id="ds3">Trees & Binary Search Trees</h3>
+<p>BST keeps left <= node <= right. Average O(log n) search/insert/delete; worst O(n) if unbalanced. Balanced variants (AVL/RB) guarantee O(log n).</p>
+<pre class="code">void inorder(struct Node* r){
+  if(!r) return; inorder(r->left); printf("%d ", r->data); inorder(r->right);
+}</pre>`,
+      ds4:`<h3 id="ds4">Graphs & Traversals</h3>
+<p>Adjacency list for sparse graphs; matrix for dense. BFS is O(V+E) and finds shortest path in unweighted graphs; DFS explores depth-first.</p>
+<pre class="code">/* Pseudocode BFS */
+visited[s]=true; queue q; q.push(s);
+while(!q.empty()){ u=q.front(); q.pop();
+  for(v in adj[u]) if(!visited[v]){ visited[v]=true; q.push(v); }
+}</pre>`,
+      ds5:`<h3 id="ds5">Sorting & Searching Algorithms</h3>
+<p>Study QuickSort, MergeSort, HeapSort (O(n log n)); simple O(n²) sorts; stability & space trade-offs; binary search O(log n).</p>
+<pre class="code">int partition(int a[], int l, int h){
+  int p=a[h], i=l-1;
+  for(int j=l;j<h;j++) if(a[j]<=p){ ++i; int t=a[i]; a[i]=a[j]; a[j]=t; }
+  int t=a[i+1]; a[i+1]=a[h]; a[h]=t; return i+1;
+}</pre>`
+    },
+    pyqs:{
+      2024:[
+        'Explain BFS and DFS with examples and complexities.',
+        'Implement QuickSort and analyze average vs worst cases.'
+      ],
+      2023:[
+        'C program for singly linked list with insert/delete.',
+        'Explain AVL rotations with sketches.'
+      ],
+      2022:[
+        'Array vs Linked List — differences and use-cases.',
+        'Discuss Dijkstra algorithm and complexity.'
+      ],
+      2021:[
+        'Hash tables: collisions and resolutions.',
+        'QuickSort vs MergeSort comparison.'
+      ],
+      2020:[
+        'Define stack and queue with applications.',
+        'Write pseudocode for BFS and DFS.'
+      ]
+    }
+  },
+  {
+    id:'php', title:'PHP',
+    summary:'Server-side programming: syntax, forms, sessions, file handling, MySQL (PDO) & security.',
+    estimated:'7 hours', lastUpdated:new Date().toLocaleDateString(),
+    toc:[
+      {id:'php1',title:'PHP Basics & Syntax'},
+      {id:'php2',title:'Forms & Validation'},
+      {id:'php3',title:'Sessions & Cookies'},
+      {id:'php4',title:'File Handling & Uploads'},
+      {id:'php5',title:'Database Connectivity (PDO/MySQL)'}
+    ],
+    content:{
+      php1:`<h3 id="php1">PHP Basics & Syntax</h3>
+<p>PHP runs server-side and mixes with HTML using <code>&lt;?php ?&gt;</code> tags. Variables start with <code>$</code>; arrays can be numeric or associative; functions are first-class.</p>
+<pre class="code"><?php
+$name = "Student";
+echo "Hello, $name";
+?></pre>`,
+      php2:`<h3 id="php2">Forms & Validation</h3>
+<p>Always validate on server. Use <code>filter_input</code> and encode outputs (<code>htmlspecialchars</code>) to prevent XSS.</p>
+<pre class="code"><?php
+if($_SERVER['REQUEST_METHOD']==='POST'){
+  $email = filter_input(INPUT_POST,'email',FILTER_VALIDATE_EMAIL);
+  $name  = filter_input(INPUT_POST,'name',FILTER_SANITIZE_STRING);
+}
+?></pre>`,
+      php3:`<h3 id="php3">Sessions & Cookies</h3>
+<p>Sessions keep state server-side (ID in cookie). Regenerate session IDs after login to prevent fixation.</p>
+<pre class="code"><?php
+session_start();
+$_SESSION['user'] = 'sushil';
+session_regenerate_id(true);
+?></pre>`,
+      php4:`<h3 id="php4">File Handling & Uploads</h3>
+<p>Validate MIME type, size, and store with unique names. Never trust file extension only.</p>
+<pre class="code"><?php
+if(is_uploaded_file($_FILES['f']['tmp_name'])){
+  $safe = bin2hex(random_bytes(8))."_".basename($_FILES['f']['name']);
+  move_uploaded_file($_FILES['f']['tmp_name'], __DIR__."/uploads/".$safe);
+}
+?></pre>`,
+      php5:`<h3 id="php5">Database Connectivity (PDO/MySQL)</h3>
+<p>Use prepared statements to prevent SQL Injection.</p>
+<pre class="code"><?php
+$pdo = new PDO('mysql:host=localhost;dbname=studyhub','user','pass');
+$stmt = $pdo->prepare('SELECT * FROM students WHERE id=?');
+$stmt->execute([$id]); $rows=$stmt->fetchAll(PDO::FETCH_ASSOC);
+?></pre>`
+    },
+    pyqs:{
+      2024:['Secure file uploads in PHP.','Form validation using sessions — explain flow.'],
+      2023:['Prepared statements & SQLi prevention.','Session fixation & prevention methods.'],
+      2022:['Cookies vs Sessions.','Build simple login using PHP & MySQL.'],
+      2021:['CSRF and mitigations.','Unix file permissions for uploads.'],
+      2020:['GET vs POST.','Sanitize input function in PHP.']
+    }
+  },
+  {
+    id:'cyber', title:'Cyber Security',
+    summary:'CIA triad, cryptography, network security, web vulns (XSS/CSRF/SQLi), incident response.',
+    estimated:'6 hours', lastUpdated:new Date().toLocaleDateString(),
+    toc:[
+      {id:'cy1',title:'Principles & CIA Triad'},
+      {id:'cy2',title:'Cryptography Basics'},
+      {id:'cy3',title:'Network Security'},
+      {id:'cy4',title:'Web Security (XSS, CSRF, SQLi)'},
+      {id:'cy5',title:'Incident Response & Forensics'}
+    ],
+    content:{
+      cy1:`<h3 id="cy1">Principles & CIA Triad</h3>
+<p>Confidentiality, Integrity, Availability. Map each to concrete controls.</p>
+<ul><li>Confidentiality: encryption, access control.</li><li>Integrity: checksums, signatures.</li><li>Availability: redundancy, DDoS mitigation.</li></ul>`,
+      cy2:`<h3 id="cy2">Cryptography Basics</h3>
+<p>Symmetric (AES) for speed; asymmetric (RSA/ECC) for key exchange/signatures; hashing (SHA‑2/3); HMAC for integrity+auth.</p>`,
+      cy3:`<h3 id="cy3">Network Security</h3>
+<p>Firewalls, IDS/IPS, VPN, segmentation, TLS. Understand ports and the TCP/IP stack.</p>`,
+      cy4:`<h3 id="cy4">Web Security (XSS, CSRF, SQLi)</h3>
+<p>Input validation, output encoding, CSRF tokens, prepared statements.</p>`,
+      cy5:`<h3 id="cy5">Incident Response & Forensics</h3>
+<p>Phases: prepare → detect → contain → eradicate → recover → lessons learned. Maintain chain of custody.</p>`
+    },
+    pyqs:{
+      2024:['CIA triad with real-world examples.','SQLi prevention measures.'],
+      2023:['What is TLS and how it secures HTTP?','Symmetric vs asymmetric differences.'],
+      2022:['Steps in incident response lifecycle.','What is XSS? Explain mitigations.'],
+      2021:['Hashing and use-cases.','Benefits of network segmentation.'],
+      2020:['Social engineering types.','Firewall types and placement.']
+    }
+  },
+  {
+    id:'web', title:'Web Development & WordPress',
+    summary:'HTML/CSS/JS basics, responsive design, WordPress (themes, plugins, hooks), deployment.',
+    estimated:'8 hours', lastUpdated:new Date().toLocaleDateString(),
+    toc:[
+      {id:'w1',title:'HTML & Semantics'},
+      {id:'w2',title:'CSS & Responsive Design'},
+      {id:'w3',title:'JavaScript Basics'},
+      {id:'w4',title:'WordPress — Themes & Plugins'},
+      {id:'w5',title:'Deployment & Hosting'}
+    ],
+    content:{
+      w1:`<h3 id="w1">HTML & Semantics</h3><p>Use semantic tags (&lt;header&gt;,&lt;article&gt;,&lt;nav&gt;) for accessibility/SEO.</p>`,
+      w2:`<h3 id="w2">CSS & Responsive Design</h3><p>Fluid grids, media queries, Flexbox and Grid.</p>`,
+      w3:`<h3 id="w3">JavaScript Basics</h3><p>DOM, events, fetch API, ES6+ features.</p>`,
+      w4:`<h3 id="w4">WordPress — Themes & Plugins</h3><p>Template hierarchy, hooks (actions/filters), child themes.</p>`,
+      w5:`<h3 id="w5">Deployment & Hosting</h3><p>Shared vs VPS, SFTP, git-based deploys.</p>`
+    },
+    pyqs:{
+      2024:['Responsive design principles.','Create a WordPress child theme.'],
+      2023:['Explain CSS box model.','How does fetch API work?'],
+      2022:['WordPress hooks — explain with example.','Responsive navbar in CSS.'],
+      2021:['Margin vs padding differences.','localStorage vs sessionStorage.'],
+      2020:['HTML form + JS validation.','Importance of semantic HTML.']
+    }
+  },
+  {
+    id:'lab', title:'Lab Assignments & Projects',
+    summary:'Practical builds: registration form, landing page, mini PHP‑MySQL app, git & deployment.',
+    estimated:'6 hours', lastUpdated:new Date().toLocaleDateString(),
+    toc:[
+      {id:'l1',title:'Student Registration Project'},
+      {id:'l2',title:'Event Landing Page'},
+      {id:'l3',title:'Mini PHP‑MySQL APP'},
+      {id:'l4',title:'Git & Deployment'},
+      {id:'l5',title:'Project Report Tips'}
+    ],
+    content:{
+      l1:`<h3 id="l1">Student Registration Project</h3><p>Validated form, MySQL schema, image upload, ER diagram.</p>`,
+      l2:`<h3 id="l2">Event Landing Page</h3><p>Responsive layout with CTA and contact form (POST).</p>`,
+      l3:`<h3 id="l3">Mini PHP‑MySQL APP</h3><p>CRUD with PDO prepared statements.</p>`,
+      l4:`<h3 id="l4">Git & Deployment</h3><p>Branching workflow, FTP/SFTP, or static deploy.</p>`,
+      l5:`<h3 id="l5">Project Report Tips</h3><p>Requirements, design, ERD, test cases, screenshots.</p>`
+    },
+    pyqs:{
+      2024:['Build registration form with schema.','Design test cases for validation.'],
+      2023:['College fest landing page.','Steps to deploy PHP app on shared host.'],
+      2022:['ER diagram for online library.','SQL queries for reports.'],
+      2021:['File upload handling in PHP.','Project documentation checklist.'],
+      2020:['Login system in PHP.','Version control basics.']
+    }
+  },
+  {
+    id:'python', title:'Python Programming',
+    summary:'Fundamentals, data types, control flow, functions, and basic libraries.',
+    estimated:'9 hours', lastUpdated:new Date().toLocaleDateString(),
+    toc:[
+      {id:'py1',title:'Python Basics'},
+      {id:'py2',title:'Data Structures in Python'},
+      {id:'py3',title:'Functions & Modules'}
+    ],
+    content:{
+      py1:`<h3 id="py1">Python Basics</h3>
+<p>Introduction to Python syntax, variables, and operators.</p>
+<pre class="code">print("Hello, Python!")
+name = "World"
+print(f"Hello, {name}!")</pre>`,
+      py2:`<h3 id="py2">Data Structures in Python</h3>
+<p>Lists, tuples, dictionaries, and sets.</p>
+<pre class="code">my_list = [1, 2, 3]
+my_dict = {"key": "value"}</pre>`,
+      py3:`<h3 id="py3">Functions & Modules</h3>
+<p>Defining and calling functions, importing modules.</p>
+<pre class="code">def greet(name):
+  return f"Hello, {name}"
+print(greet("Alice"))</pre>`
+    },
+    pyqs:{
+      2024:['Explain list comprehensions.','Write a function to reverse a string.'],
+      2023:['Difference between tuple and list.','Implement a simple calculator.']
+    }
+  }
+];
+
+// Define all book links for the "Download All Notes" feature
+const ALL_NOTES_PDFS = [
+  "SPPU_NEP_SYB.COM. (CA) Semester III_24062025.pdf",
+  "Data Structure.pdf",
+  "data structure presentation.pdf",
+  "data structure pyq.pdf",
+  "Introduction-cyber-security.pdf",
+  "cybersecurity notes.pdf",
+  "cyber security pyq.pdf",
+  "Programming-PHP.pdf",
+  "PHP Notes.pdf",
+  "PHP PYQ's.pdf",
+  "html.pdf",
+  "dbms.pdf",
+  "data-science.pdf",
+  "python.pdf"
+];
+
+/* ====================== STATE ====================== */
+const state = {
+  user: JSON.parse(localStorage.getItem('studyhub_user')||'null'),
+  theme: localStorage.getItem('theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'dark'),
+  view: 'home',
+  currentSubject: null,
+  examMode: localStorage.getItem('examMode')==='1'
+};
+
+// In-memory user store for demo purposes (replace with backend in production)
+const users = JSON.parse(localStorage.getItem('studyhub_users') || '{}');
+
+document.body.setAttribute('data-theme', state.theme);
+
+/* ====================== HELPERS ====================== */
+const $ = (q,sc=document)=>sc.querySelector(q);
+const $$ = (q,sc=document)=>Array.from(sc.querySelectorAll(q));
+function showToast(msg){ const t=$('#toast'); t.textContent=msg; t.style.display='block'; setTimeout(()=>t.style.display='none',2500); }
+function hideAllViews(){ $$('.view').forEach(v=>v.hidden=true); }
+function showView(id){
+  hideAllViews();
+  const el=$(`#${id}`);
+  if(el){
+    el.hidden=false;
+    setActive('#'+id); // Highlight active link in header and sidebar
+    state.view=id;
+    if(window.innerWidth<900) $('#sidebar').classList.remove('open'); // Close sidebar on mobile
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+}
+
+/* ====================== RENDERERS ====================== */
+function renderSubjectsCompact(){
+  const el = $('#subjectsCompact');
+  if (!el) return;
+  el.innerHTML='';
+  SUBJECTS.forEach(s=>{
+    const d=document.createElement('div');
+    d.className='subject-card';
+    d.innerHTML = `<strong>${s.title}</strong><div class="muted" style="font-size:13px">${s.summary}</div><div style="margin-top:8px"><button class="ghost" data-open="${s.id}">Open Full Notes</button></div>`;
+    el.appendChild(d);
+  });
+}
+
+function renderSubjectsList(){
+  const el = $('#subjectsList');
+  if (!el) return;
+  el.innerHTML='';
+  SUBJECTS.forEach(s=>{
+    const c=document.createElement('div');
+    c.className='subject-card';
+    c.innerHTML = `<h3>${s.title}</h3><div class="muted">${s.summary}</div><div style="margin-top:8px"><button class="btn" data-open="${s.id}">Open Full Notes</button></div>`;
+    el.appendChild(c);
+  });
+}
+
+function renderHomePyqs(){
+  const out = $('#homePyqs');
+  if (!out) return;
+  out.innerHTML='';
+  SUBJECTS.forEach(s=>{
+    const box=document.createElement('div');
+    box.className='pyq-year';
+    const latest = Object.keys(s.pyqs||{}).sort((a,b)=>b-a)[0] || '—';
+    box.innerHTML = `<strong>${s.title}</strong><div class="muted" style="font-size:12px">Latest: ${latest}</div>`;
+    out.appendChild(box);
+  });
+}
+
+function renderBooksGrid(){
+  // This function is primarily for dynamic rendering.
+  // The books are already hardcoded in the HTML, so this function
+  // can be used if you decide to make them dynamic later.
+  // For now, it ensures the element exists.
+  const el = $('#booksGrid');
+  if (!el) return;
+}
+
+function renderBooksListForHome(){
+  const el=$('#booksList');
+  if(!el) return;
+  el.innerHTML='<div class="muted">No recent books available.</div>';
+}
+
+function renderProfile(){
+  const p=$('#profilePanel');
+  if(!p) return;
+  p.innerHTML='';
+  if(state.user){
+    p.innerHTML=`<div>Hello, <strong>${state.user.name}</strong></div><div style="margin-top:8px"><button class="btn" id="logoutNow">Logout</button></div>`;
+  } else {
+    p.innerHTML=`<div class="muted">Not logged in</div><div style="margin-top:8px"><button class="btn" id="loginNow">Login</button></div>`;
+  }
+}
+
+/* ====================== NOTES & PROGRESS ====================== */
+function openSubject(id){
+  const s=SUBJECTS.find(x=>x.id===id);
+  if(!s) return;
+
+  if(!state.user){
+    showToast('Login required to view full notes');
+    showView('profile'); // Redirect to profile to prompt login
+    return;
+  }
+
+  state.currentSubject=s;
+  $('#notesTitle').textContent=s.title;
+  $('#lastUpdated').textContent='Last Updated: '+s.lastUpdated;
+  $('#estimatedTime').textContent='Estimated Study Time: '+s.estimated;
+  buildTOC(s);
+  buildNotes(s);
+  buildProgress(s);
+  buildSubjectPyqs(s);
+  showView('notes'); // Change view to notes section
+}
+
+function buildTOC(sub){
+  const t=$('#toc');
+  if (!t) return;
+  t.innerHTML='<strong>Index</strong><div style="margin-top:8px"></div>';
+  const list=document.createElement('div');
+  sub.toc.forEach(u=>{
+    const item=document.createElement('div');
+    item.innerHTML=`<label><input type="checkbox" class="checkbox unit-check" data-unit="${u.id}"> <a href="#${u.id}" data-jump="${u.id}">${u.title}</a></label>`;
+    list.appendChild(item);
+  });
+  t.appendChild(list);
+
+  // Add event listener for unit checkboxes
+  list.addEventListener('change', (e) => {
+    if (e.target.classList.contains('unit-check')) {
+      const unitId = e.target.dataset.unit;
+      const savedProgress = JSON.parse(localStorage.getItem('progress_' + sub.id) || '{}');
+      savedProgress[unitId] = e.target.checked;
+      localStorage.setItem('progress_' + sub.id, JSON.stringify(savedProgress));
+      updateProgress(sub);
+    }
+  });
+}
+
+function buildNotes(sub){
+  const c=$('#notesContent');
+  if (!c) return;
+  c.innerHTML='';
+  for(const k of Object.keys(sub.content)){
+    c.insertAdjacentHTML('beforeend', sub.content[k]);
+  }
+  wrapCodeBlocks();
+  setupSearchWithin();
+}
+
+function buildProgress(sub){
+  const plist=$('#progressList');
+  if (!plist) return;
+  plist.innerHTML='';
+  const saved=JSON.parse(localStorage.getItem('progress_'+sub.id)||'{}');
+  sub.toc.forEach(u=>{
+    const row=document.createElement('div');
+    row.innerHTML=`<label><input type="checkbox" class="checkbox unit-check" data-unit="${u.id}" ${saved[u.id]?'checked':''}> ${u.title}</label>`;
+    plist.appendChild(row);
+  });
+  updateProgress(sub);
+}
+
+function updateProgress(sub){
+  const saved=JSON.parse(localStorage.getItem('progress_'+sub.id)||'{}');
+  const total=sub.toc.length;
+  const done=Object.values(saved).filter(Boolean).length;
+  $('#progressSummary').textContent=`Progress: ${Math.round(done/total*100)}% complete`;
+}
+
+function buildSubjectPyqs(sub){
+  const p=$('#subjectPyqs');
+  if (!p) return;
+  p.innerHTML='';
+  for(const y of Object.keys(sub.pyqs).sort((a,b)=>b-a)){
+    const box=document.createElement('div');
+    box.className='card';
+    box.style.marginBottom='8px';
+    box.innerHTML=`<strong>${y}</strong><ol style="margin-top:8px">${sub.pyqs[y].map(q=>'<li>'+q+'</li>').join('')}</ol>`;
+    p.appendChild(box);
+  }
+}
+
+/* ====================== CODE UTILITIES ====================== */
+function wrapCodeBlocks(){
+  $$('#notesContent pre.code').forEach(pre=>{
+    if(pre.dataset.processed) return;
+    pre.dataset.processed='1';
+    const wrap=document.createElement('div');
+    wrap.className='code-wrapper';
+    const tools=document.createElement('div');
+    tools.className='code-tools';
+    const copy=document.createElement('button');
+    copy.className='ghost';
+    copy.textContent='Copy';
+    const tog=document.createElement('button');
+    tog.className='ghost';
+    tog.textContent='Hide';
+
+    copy.onclick=()=>{
+      navigator.clipboard.writeText(pre.textContent).then(()=>showToast('Code copied'));
+    };
+
+    let collapsed=false;
+    tog.onclick=()=>{
+      collapsed=!collapsed;
+      pre.style.display=collapsed?'none':'block';
+      tog.textContent=collapsed?'Show':'Hide';
+    };
+
+    pre.parentNode.insertBefore(wrap,pre);
+    wrap.appendChild(pre);
+    tools.appendChild(copy);
+    tools.appendChild(tog);
+    wrap.appendChild(tools);
+  });
+}
+
+/* ====================== SEARCH INSIDE NOTES ====================== */
+let matches=[], cur=0;
+function setupSearchWithin(){
+  const input=$('#notesSearch');
+  const content=$('#notesContent');
+  if(!input||!content) return;
+
+  input.value='';
+  matches=[];
+  const nav=$('#searchNav');
+  nav.style.display='none';
+
+  input.oninput=()=>{
+    clearHighlights();
+    const q=input.value.trim();
+    if(!q){
+      nav.style.display='none';
+      matches=[];
+      return;
+    }
+    const re=new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi');
+    highlight(content,re);
+    matches = $$('.search-highlight');
+    if(matches.length){
+      nav.style.display='flex';
+      cur=0;
+      jump(0);
+    } else {
+      nav.style.display='none';
+    }
+  };
+
+  $('#nextMatch').onclick=()=>{
+    if(!matches.length) return;
+    cur=(cur+1)%matches.length;
+    jump(cur);
+  };
+
+  $('#prevMatch').onclick=()=>{
+    if(!matches.length) return;
+    cur=(cur-1+matches.length)%matches.length;
+    jump(cur);
+  };
+
+  input.onkeydown=(e)=>{
+    if(e.key==='Enter' && matches.length) jump(0);
+  };
+}
+
+function jump(i){
+  matches.forEach(m=>m.style.outline='none');
+  const el=matches[i];
+  if(!el) return;
+  el.style.outline='3px solid rgba(59,130,246,.5)';
+  el.scrollIntoView({behavior:'smooth', block:'center'});
+}
+
+function clearHighlights(){
+  $$('.search-highlight').forEach(n=>{
+    n.outerHTML = n.innerHTML;
+  });
+}
+
+function highlight(node,re){
+  const tw=document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+  const texts=[];
+  while(tw.nextNode()) texts.push(tw.currentNode);
+  texts.forEach(tn=>{
+    const p=tn.parentNode;
+    if(!p || p.nodeName==='SCRIPT') return;
+    if(re.test(tn.nodeValue)){
+      const span=document.createElement('span');
+      span.innerHTML = tn.nodeValue.replace(re, m=>`<span class="search-highlight" style="background:var(--hl); color:#111; padding:0 .15em">${m}</span>`);
+      p.replaceChild(span, tn);
+    }
+  });
+}
+
+/* ====================== AUTH (Login/Signup) ====================== */
+function showAuthModal(formType = 'login') {
+  $('#authModal').style.display = 'flex';
+  if (formType === 'login') {
+    $('#loginFormContainer').style.display = 'block';
+    $('#signupFormContainer').style.display = 'none';
+  } else {
+    $('#loginFormContainer').style.display = 'none';
+    $('#signupFormContainer').style.display = 'block';
+  }
+}
+
+function hideAuthModal() {
+  $('#authModal').style.display = 'none';
+}
+
+function initAuth(){
+  $('#loginBtn').addEventListener('click', ()=>{
+    if(state.user){
+      state.user=null;
+      localStorage.removeItem('studyhub_user');
+      renderProfile();
+      showToast('Logged out');
+      updateLoginButton();
+    } else {
+      showAuthModal('login');
+    }
+  });
+
+  $('#closeAuthModal').addEventListener('click', hideAuthModal);
+  $('#showSignup').addEventListener('click', () => showAuthModal('signup'));
+  $('#showLogin').addEventListener('click', () => showAuthModal('login'));
+
+  // Google Login/Signup Placeholder
+  $('#googleLoginBtn').addEventListener('click', () => {
+    showToast('Google login is not implemented in this demo. Please use username/password.');
+  });
+  $('#googleSignupBtn').addEventListener('click', () => {
+    showToast('Google signup is not implemented in this demo. Please use username/password.');
+  });
+
+  // Login Form Submission
+  $('#loginForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const username = $('#loginUsername').value.trim();
+    const password = $('#loginPassword').value.trim();
+
+    if (users[username] && users[username].password === password) {
+      state.user = { name: username };
+      localStorage.setItem('studyhub_user', JSON.stringify(state.user));
+      renderProfile();
+      showToast('Logged in as ' + username);
+      hideAuthModal();
+      updateLoginButton();
+      if (state.view === 'profile' && state.currentSubject) {
+        openSubject(state.currentSubject.id);
+      }
+    } else {
+      showToast('Invalid username or password.');
+    }
+  });
+
+  // Signup Form Submission
+  $('#signupForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const username = $('#signupUsername').value.trim();
+    const password = $('#signupPassword').value.trim();
+    const confirmPassword = $('#signupConfirmPassword').value.trim();
+
+    if (username.length < 3) {
+      showToast('Username must be at least 3 characters.');
+      return;
+    }
+    if (password.length < 6) {
+      showToast('Password must be at least 6 characters.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      showToast('Passwords do not match.');
+      return;
+    }
+    if (users[username]) {
+      showToast('Username already exists. Please choose another.');
+      return;
+    }
+
+    users[username] = { password: password };
+    localStorage.setItem('studyhub_users', JSON.stringify(users));
+    showToast('Account created successfully! Please login.');
+    showAuthModal('login'); // Switch to login form after successful signup
+  });
+
+  document.addEventListener('click', (e)=>{
+    if(e.target.id==='loginNow'){
+      showAuthModal('login');
+    }
+    if(e.target.id==='logoutNow'){
+      state.user=null;
+      localStorage.removeItem('studyhub_user');
+      renderProfile();
+      showToast('Logged out');
+      updateLoginButton();
+    }
+  });
+}
+
+function updateLoginButton() {
+  if (state.user) {
+    $('#loginBtn').textContent = 'Logout';
+  } else {
+    $('#loginBtn').textContent = 'Login';
+  }
+}
+
+/* ====================== EVENTS ====================== */
+function setActive(hash){
+  document.querySelectorAll(".topnav a,.nav-link").forEach(a=>{
+    a.classList.remove("active"); a.removeAttribute("aria-current");
+    if(a.getAttribute("href")===hash){a.classList.add("active"); a.setAttribute("aria-current","page");}
+  });
+}
+
+function initNav(){
+  // Hash-based routing
+  function applyRoute(){
+    const hash=(location.hash||'#home');
+    const id=hash.replace('#','');
+    const exists=$(`[data-view]#${id}`);
+    showView(exists? id : 'home');
+  }
+  window.addEventListener('hashchange', applyRoute);
+  applyRoute(); // Initial route application
+
+  // Open subject buttons
+  document.addEventListener('click', (e)=>{
+    const btn=e.target.closest('[data-open]');
+    if(btn){
+      openSubject(btn.dataset.open);
+    }
+  });
+
+  // Subject search filter
+  $('#subjectSearch')?.addEventListener('input', (e)=>{
+    const q=e.target.value.toLowerCase();
+    const cont=$('#subjectsList');
+    cont?.querySelectorAll('.subject-card').forEach(card=>{
+      const txt=card.textContent.toLowerCase();
+      card.style.display = txt.includes(q)?'block':'none';
+    });
+  });
+
+  // Print & exam
+  document.addEventListener('click', (e)=>{
+    if(e.target.id==='printBtn') window.print();
+  });
+  $('#enterExam')?.addEventListener('click', ()=>{
+    $('#examModeToggle').click();
+  });
+
+  // Hamburger
+  $('#hamburger')?.addEventListener('click', ()=> $('#sidebar').classList.toggle('open'));
+}
+
+/* ====================== THEME TOGGLE ====================== */
+function setTheme(next){
+  state.theme=next;
+  document.body.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+  const icon = (next==='light') ? '☀️' : '🌙';
+  $('#themeToggle').textContent = icon;
+  showToast('Theme: '+next);
+}
+$('#themeToggle').addEventListener('click', ()=>{
+  setTheme(state.theme==='light' ? 'dark' : 'light');
+});
+
+/* ====================== EXAM MODE ====================== */
+$('#examModeToggle')?.addEventListener('click', ()=>{
+  state.examMode=!state.examMode;
+  localStorage.setItem('examMode', state.examMode?'1':'0');
+  $('#examModeToggle').textContent = state.examMode ? 'Disable Exam Mode' : 'Enable Exam Mode';
+  $$('.definition,.note').forEach(el=> el.style.display = state.examMode ? 'none' : 'block');
+  showToast(state.examMode ? '✅ Exam Mode Enabled' : '📖 Exam Mode Disabled');
+});
+
+/* ====================== DOWNLOAD ALL NOTES ====================== */
+$('#downloadAllPdf')?.addEventListener('click', () => {
+  if (!state.user) {
+    showToast('Login required to download notes.');
+    showAuthModal('login');
+    return;
+  }
+
+  showToast('Preparing notes for download...');
+
+  // Simulate downloading multiple files by creating hidden links and clicking them
+  // Note: Browsers might block multiple automatic downloads.
+  // For a true "download all as one PDF", you'd need a server-side solution
+  // or a client-side library that can merge PDFs (which is complex).
+  ALL_NOTES_PDFS.forEach((pdfPath, index) => {
+    setTimeout(() => { // Add a small delay to avoid browser blocking
+      const link = document.createElement('a');
+      link.href = pdfPath;
+      link.download = pdfPath.split('/').pop(); // Use filename as download name
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }, 500 * index); // 500ms delay between each download
+  });
+
+  showToast('Downloads initiated. Check your browser downloads.');
+});
+
+
+/* ====================== KEYBOARD SHORTCUTS ====================== */
+document.addEventListener('keydown',(e)=>{
+  if(document.activeElement && ['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) return;
+  if(e.key==='D' || e.key==='d') $('#themeToggle').click();
+  if(e.key==='T' || e.key==='t') window.scrollTo({top:0,behavior:'smooth'});
+  if(e.key==='P' || e.key==='p') $('#printBtn')?.click();
+  if(e.key==='H' || e.key==='h') location.hash='#home';
+  if(e.key==='N' || e.key==='n') location.hash='#notes';
+  if(e.key==='Q' || e.key==='q') location.hash='#pyqs';
+  if(e.key==='?') alert('Shortcuts:\nD=Toggle Theme, T=Top, P=Print, H=Home, N=Notes, Q=PYQs');
+});
+
+/* ====================== INIT ====================== */
+(function init(){
+  // Hide the main content initially
+  document.body.style.visibility = 'hidden';
+
+  // Show splash screen
+  const splashScreen = document.getElementById('splash-screen');
+  splashScreen.style.display = 'flex';
+
+  // After a delay, fade out the splash screen and show content
+  setTimeout(() => {
+    splashScreen.classList.add('fade-out');
+    document.body.style.visibility = 'visible'; // Make content visible
+    setTimeout(() => {
+      splashScreen.style.display = 'none'; // Completely remove after fade
+    }, 1000); // Matches CSS transition duration
+  }, 2000); // Display splash for 2 seconds
+
+  setTheme(state.theme);
+  updateLoginButton(); // Set initial login button state
+  renderSubjectsCompact();
+  renderSubjectsList();
+  renderHomePyqs();
+  renderBooksGrid(); // Render static books
+  renderBooksListForHome(); // Render dynamic books if any (currently placeholder)
+  renderProfile();
+  buildPyqMaster();
+  initAuth();
+  initNav();
+})();
+
+function buildPyqMaster(){
+  const p=$('#pyqsMaster');
+  if (!p) return;
+  p.innerHTML='';
+  SUBJECTS.forEach(s=>{
+    const outer=document.createElement('div');
+    outer.className='card';
+    outer.style.marginBottom='8px';
+    outer.innerHTML=`<h3>${s.title}</h3>`;
+    for(const y of Object.keys(s.pyqs).sort((a,b)=>b-a)){
+      const box=document.createElement('div');
+      box.className='pyq-year';
+      box.innerHTML=`<strong>${y}</strong><ol>${s.pyqs[y].map(q=>'<li>'+q+'</li>').join('')}</ol>`;
+      outer.appendChild(box);
+    }
+    p.appendChild(outer);
+  });
+}
+</script>
+</body>
+</html>
